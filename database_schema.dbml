@@ -1,0 +1,162 @@
+// IFran Presence - Schéma de Base de Données
+// Généré automatiquement à partir des migrations Laravel
+
+Table users {
+  id bigint [pk]
+  nom varchar
+  prenom varchar
+  email varchar [unique]
+  email_verified_at timestamp [null]
+  password varchar
+  role enum('admin', 'enseignant', 'coordinateur', 'etudiant', 'parent') [default: 'etudiant']
+  photo varchar [null]
+  classe_id bigint [null]
+  remember_token varchar [null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table classes {
+  id bigint [pk]
+  nom varchar
+  coordinateur_id bigint [null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table modules {
+  id bigint [pk]
+  nom varchar
+  code varchar [unique]
+  description text [null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table seances {
+  id bigint [pk]
+  module_id bigint
+  classe_id bigint
+  enseignant_id bigint [null]
+  date_debut datetime
+  date_fin datetime
+  type enum('presentiel', 'elearning', 'workshop')
+  salle varchar [null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table presences {
+  id bigint [pk]
+  etudiant_id bigint
+  seance_id bigint
+  statut enum('present', 'retard', 'absent')
+  justifie boolean [default: false]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table justifications {
+  id bigint [pk]
+  presence_id bigint
+  coordinateur_id bigint
+  raison varchar
+  fichier_justificatif varchar [null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table emploi_du_temps {
+  id bigint [pk]
+  jour_semaine varchar
+  heure_debut time
+  heure_fin time
+  module_id bigint
+  classe_id bigint
+  enseignant_id bigint [null]
+  type varchar [null]
+  salle varchar [null]
+  est_actif boolean [default: true]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table notifications {
+  id bigint [pk]
+  user_id bigint
+  titre varchar
+  message text
+  type varchar [default: 'info']
+  action_url varchar [null]
+  action_text varchar [null]
+  lu boolean [default: false]
+  lu_at timestamp [null]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table classe_user {
+  user_id bigint
+  classe_id bigint
+  
+  indexes {
+    (user_id, classe_id) [pk]
+  }
+}
+
+Table password_reset_tokens {
+  email varchar [pk]
+  token varchar
+  created_at timestamp [null]
+}
+
+Table sessions {
+  id varchar [pk]
+  user_id bigint [null]
+  ip_address varchar(45) [null]
+  user_agent text [null]
+  payload longtext
+  last_activity integer
+}
+
+Table cache {
+  key varchar [pk]
+  value longtext
+  expiration integer
+}
+
+// Relations entre les tables
+
+Ref: users.classe_id > classes.id [delete: set null]
+Ref: classes.coordinateur_id > users.id [delete: set null]
+
+Ref: seances.module_id > modules.id [delete: cascade]
+Ref: seances.classe_id > classes.id [delete: cascade]
+Ref: seances.enseignant_id > users.id [delete: set null]
+
+Ref: presences.etudiant_id > users.id [delete: cascade]
+Ref: presences.seance_id > seances.id [delete: cascade]
+
+Ref: justifications.presence_id > presences.id [delete: cascade]
+Ref: justifications.coordinateur_id > users.id [delete: cascade]
+
+Ref: emploi_du_temps.module_id > modules.id [delete: cascade]
+Ref: emploi_du_temps.classe_id > classes.id [delete: cascade]
+Ref: emploi_du_temps.enseignant_id > users.id [delete: set null]
+
+Ref: notifications.user_id > users.id [delete: cascade]
+
+Ref: classe_user.user_id > users.id [delete: cascade]
+Ref: classe_user.classe_id > classes.id [delete: cascade]
+
+Ref: sessions.user_id > users.id [delete: cascade]
+
+// Index pour optimiser les performances
+Indexes {
+  presences: (etudiant_id, statut)
+  presences: created_at
+  notifications: (user_id, lu)
+  notifications: created_at
+  sessions: user_id
+  sessions: last_activity
+} 

@@ -15,7 +15,7 @@ class EtudiantController extends Controller
     public function mesAbsences()
     {
         $etudiant = Auth::user();
-        $absences = $etudiant->presences()
+        $absences = $etudiant->presencesEtudiant()
             ->where('statut', 'absent')
             ->with(['seance.module', 'justification'])
             ->orderBy('created_at', 'desc')
@@ -32,13 +32,13 @@ class EtudiantController extends Controller
         $etudiant = Auth::user();
 
         // Calcul du taux de présence global
-        $totalPresences = $etudiant->presences()->count();
-        $presents = $etudiant->presences()->where('statut', 'present')->count();
+        $totalPresences = $etudiant->presencesEtudiant()->count();
+        $presents = $etudiant->presencesEtudiant()->where('statut', 'present')->count();
         $tauxGlobal = $totalPresences > 0 ? round(($presents / $totalPresences) * 100, 2) : 100;
 
         // Calcul par module
         $statsModules = [];
-        foreach ($etudiant->presences()->with('seance.module')->get() as $presence) {
+        foreach ($etudiant->presencesEtudiant()->with('seance.module')->get() as $presence) {
             $moduleId = $presence->seance->module->id;
             if (!isset($statsModules[$moduleId])) {
                 $statsModules[$moduleId] = [

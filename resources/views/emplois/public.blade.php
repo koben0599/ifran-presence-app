@@ -1,0 +1,185 @@
+@extends('layouts.app')
+
+@section('content')
+<div class="container mx-auto px-4 py-8">
+    <!-- En-tête -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900">Emploi du Temps</h1>
+                <p class="text-gray-600 mt-2">Planning hebdomadaire des cours</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <select id="classeSelect" class="border border-gray-300 rounded-lg px-4 py-2">
+                    @foreach($classes as $classe)
+                    <option value="{{ $classe->id }}" {{ $classeSelectionnee && $classeSelectionnee->id == $classe->id ? 'selected' : '' }}>
+                        {{ $classe->nom }}
+                    </option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+    </div>
+
+    @if($classeSelectionnee)
+    <!-- Informations de la classe -->
+    <div class="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div class="flex items-center">
+            <svg class="w-6 h-6 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+            </svg>
+            <div>
+                <h2 class="text-lg font-semibold text-blue-900">{{ $classeSelectionnee->nom }}</h2>
+                <p class="text-blue-700">Emploi du temps de la semaine</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grille de l'emploi du temps -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <!-- En-tête du tableau -->
+        <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">Planning hebdomadaire - {{ $classeSelectionnee->nom }}</h2>
+        </div>
+
+        <!-- Tableau de l'emploi du temps -->
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Horaire</th>
+                        @foreach($joursSemaine as $jour)
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            {{ ucfirst($jour) }}
+                        </th>
+                        @endforeach
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @php
+                        $horaires = [
+                            '08:00' => '08:00-10:00',
+                            '10:00' => '10:00-12:00',
+                            '14:00' => '14:00-16:00',
+                            '16:00' => '16:00-18:00'
+                        ];
+                    @endphp
+
+                    @foreach($horaires as $heure => $plage)
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {{ $plage }}
+                        </td>
+                        @foreach($joursSemaine as $jour)
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            @php
+                                $emplois = $emploisDuTemps[$jour] ?? collect();
+                                $emploi = $emplois->where('heure_debut', $heure)->first();
+                            @endphp
+
+                            @if($emploi)
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex-1">
+                                        <h4 class="text-sm font-semibold text-blue-900">
+                                            {{ $emploi->module->nom ?? 'Module non défini' }}
+                                        </h4>
+                                        <p class="text-xs text-blue-700 mt-1">
+                                            {{ $emploi->enseignant->name ?? 'Enseignant non défini' }}
+                                        </p>
+                                        <p class="text-xs text-blue-600 mt-1">
+                                            {{ $emploi->salle }}
+                                        </p>
+                                    </div>
+                                    <div class="ml-2">
+                                        @if($emploi->type === 'presentiel')
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                Présentiel
+                                            </span>
+                                        @elseif($emploi->type === 'elearning')
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                                E-learning
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                                Workshop
+                                            </span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                            @else
+                            <div class="text-gray-400 text-sm">-</div>
+                            @endif
+                        </td>
+                        @endforeach
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Légende -->
+    <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-blue-50 rounded-lg p-4">
+            <div class="flex items-center">
+                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                    <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-blue-900">Cours Présentiel</h3>
+                    <p class="text-sm text-blue-700">En salle de classe</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-purple-50 rounded-lg p-4">
+            <div class="flex items-center">
+                <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+                    <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-purple-900">E-Learning</h3>
+                    <p class="text-sm text-purple-700">Cours en ligne</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-orange-50 rounded-lg p-4">
+            <div class="flex items-center">
+                <div class="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center mr-3">
+                    <svg class="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-orange-900">Workshop</h3>
+                    <p class="text-sm text-orange-700">Exercices pratiques</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    @else
+    <!-- Aucune classe sélectionnée -->
+    <div class="text-center py-12">
+        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">Aucune classe sélectionnée</h3>
+        <p class="mt-1 text-sm text-gray-500">Veuillez sélectionner une classe pour voir son emploi du temps.</p>
+    </div>
+    @endif
+</div>
+
+<script>
+document.getElementById('classeSelect').addEventListener('change', function() {
+    const classeId = this.value;
+    window.location.href = `/emploi-du-temps/${classeId}`;
+});
+</script>
+@endsection 

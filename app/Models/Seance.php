@@ -9,7 +9,12 @@ class Seance extends Model
 {
     use HasFactory;
     
-    protected $fillable = ['module_id', 'enseignant_id', 'date_debut', 'date_fin', 'type', 'classe', 'annule'];
+    protected $fillable = ['module_id', 'enseignant_id', 'classe_id', 'date_debut', 'date_fin', 'type', 'salle'];
+    
+    protected $casts = [
+        'date_debut' => 'datetime',
+        'date_fin' => 'datetime',
+    ];
     
     public function module()
     {
@@ -24,5 +29,10 @@ class Seance extends Model
     public function presences()
     {
         return $this->hasMany(Presence::class);
+    }
+
+    public function classe()
+    {
+        return $this->belongsTo(Classe::class, 'classe_id');
     }
 }

@@ -28,17 +28,7 @@ class Etudiant extends Authenticatable
     }
     public function verifierPresenceModule(Module $module)
 {
-    $seancesModule = $module->seances()->pluck('id');
-    $totalSeances = $seancesModule->count();
-    
-    if ($totalSeances === 0) return;
-    
-    $presences = $this->presences()
-        ->whereIn('seance_id', $seancesModule)
-        ->get();
-        
-    $presentCount = $presences->where('statut', 'present')->count();
-    $taux = ($presentCount / $totalSeances) * 100;
+    $taux = self::calculerTauxPresence($this->id, $module->id);
     
     if ($taux <= 25) {
         event(new EtudiantDroppe($this, $module, $taux));

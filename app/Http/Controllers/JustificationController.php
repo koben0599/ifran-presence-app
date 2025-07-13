@@ -13,6 +13,12 @@ use Illuminate\Support\Facades\Storage;
 
 class JustificationController extends Controller
 {
+    public function index()
+    {
+        $justifications = Justification::all(); // Ou une logique personnalisée
+        return view('justifications.index', compact('justifications'));
+    }
+
     public function create(Presence $presence)
     {
         return view('coordinateur.justifications.create', compact('presence'));
